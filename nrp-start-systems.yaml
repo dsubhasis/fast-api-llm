@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: llm-systems
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: nvidia.com/gpu.product
+                  operator: In
+                  values:
+                    - NVIDIA-A40
+                    - NVIDIA-A100-SXM4-80GB
+
+      tolerations:
+        - effect: NoSchedule
+          key: nautilus.io/nrp-testing
+          operator: Exists
+      containers:
+        - name: rsmt-gpu
+          image: subhasis79/llm-fastchat:latest
+          env:
+            - name: 'model_name'  
+              value: "Trendyol/Trendyol-LLM-7b-chat-v0.1"  
+          command: ["/bin/sh", "-c"]
+          args: ["sleep 18000;                      
+             
+          "]
+
+          resources:
+            limits:
+              memory: 128Gi
+              cpu: "32"
+              nvidia.com/gpu: 1
+
+            requests:
+              memory: 128Gi
+              cpu: "32"
+              nvidia.com/gpu: 1
+
+          volumeMounts:
+            - mountPath: /datavol
+              name: datavol
+      volumes:
+        - name: datavol
+          persistentVolumeClaim:
+            claimName:  biopredict-vol
+      restartPolicy: Never
+  backoffLimit: 3
